@@ -7,7 +7,7 @@ Projeto de teste criado para colocar em prática os conhecimentos adquiridos com
 
 ## Tecnologias
 - Spring Boot 3.4.3
-- Keycloak 19.0.3
+- Keycloak 26.1.4
 
 ## Maven dependências:
 - `spring-boot-starter-security`
@@ -22,3 +22,54 @@ Projeto de teste criado para colocar em prática os conhecimentos adquiridos com
     - Suporte para clientes OAuth 2.0, permitindo que a aplicação se autentique com provedores OAuth 2.0.
 - `spring-boot-starter-oauth2-resource-server`
     - Suporte para servidores de recursos OAuth 2.0, permitindo que a aplicação valide tokens de acesso e proteja endpoints.
+
+## Docker Compose
+
+Para facilitar a execução do projeto, você pode utilizar o Docker Compose. Abaixo está um exemplo do arquivo `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /home/rentroom/Documentos/Config-Projects/Postgre-Config-Keycloak/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql
+    ports:
+      - 3333:5432
+    networks:
+      - keycloak_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: ["start-dev"]                  # Adicionando o comando correto para iniciar o servidor
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: <IP_PC_WITH_KEYCLOAK>    # IP do Raspberry na rede
+      KC_HOSTNAME_STRICT: "false"           # Permite acessos externos
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    networks:
+      - keycloak_network
+    
+networks:
+  keycloak_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
