@@ -1,7 +1,7 @@
 package br.com.curso.spring_keycloak.services.impl;
 
 import br.com.curso.spring_keycloak.components.HttpComponent;
-import br.com.curso.spring_keycloak.models.User;
+import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.services.LoginService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +33,7 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
     }
 
     @Override
-    public ResponseEntity<String> login(User user) {
+    public ResponseEntity<String> login(UserDTO user) {
         httpComponent.httpHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> map = HttpParamsMapBuilder.builder()

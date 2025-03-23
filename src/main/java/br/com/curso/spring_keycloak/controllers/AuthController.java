@@ -1,6 +1,6 @@
 package br.com.curso.spring_keycloak.controllers;
 
-import br.com.curso.spring_keycloak.models.User;
+import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.services.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody User user) {
+    public ResponseEntity<?> login(@Valid @RequestBody UserDTO user) {
         return loginService.login(user);
     }
 

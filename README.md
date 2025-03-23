@@ -22,6 +22,29 @@ Projeto de teste criado para colocar em prática os conhecimentos adquiridos com
     - Suporte para clientes OAuth 2.0, permitindo que a aplicação se autentique com provedores OAuth 2.0.
 - `spring-boot-starter-oauth2-resource-server`
     - Suporte para servidores de recursos OAuth 2.0, permitindo que a aplicação valide tokens de acesso e proteja endpoints.
+- `spring-boot-starter-data-jpa`
+  - IN DEVELOP
+- `postgresql`
+  - IN DEVELOP 
+- `keycloak-admin-client`
+  - IN DEVELOP
+
+## Instruções Keycloak
+É necessário criar um usuário admin para que as ações de administração possam ser realizadas. Para isso, acesse o painel de administração do Keycloak e siga os passos abaixo:
+- Criar usuário.
+- Associar a role: realm-admin.
+
+## Configuração do PostgreSQL
+Abaixo script para criar o schema:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS app_schema;
+CREATE USER app_spring WITH PASSWORD 'app_spring';
+GRANT USAGE ON SCHEMA app_schema TO app_spring;
+GRANT CREATE ON SCHEMA app_schema TO app_spring;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app_schema TO app_spring;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app_schema TO app_spring;
+```
 
 ## Docker Compose
 
@@ -49,27 +72,29 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
-    command: ["start-dev"]                  # Adicionando o comando correto para iniciar o servidor
+    command: ["start-dev"]          # Adicionando o comando correto para iniciar o servidor
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
+      KC_DB_SCHEMA: keycloak_schema # Define o schema correto
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: <IP_PC_WITH_KEYCLOAK>    # IP do Raspberry na rede
-      KC_HOSTNAME_STRICT: "false"           # Permite acessos externos
+      KC_HOSTNAME: 192.168.2.70     # IP do Raspberry na rede
+      KC_HOSTNAME_STRICT: "false"   # Permite acessos externos
     ports:
       - 8080:8080
     depends_on:
       - postgres
     networks:
       - keycloak_network
-    
+
 networks:
   keycloak_network:
     driver: bridge
 
 volumes:
   postgres_data:
+```
