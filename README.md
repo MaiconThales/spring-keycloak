@@ -58,6 +58,21 @@ Caso deseje habilitar a verificação de e-mail para novos usuários:
   - Para testes, utilize valores fictícios em `from`, `host` e `port`.
 4. Ao tentar fazer login, o usuário receberá um e-mail de confirmação.
 
+### Configurar Autentificação de dois fatores
+
+A seguir instruções para configurar no Keycloak a altentificação de dois fatores:
+
+1. Acesse o **Realm**.
+2. Vá até a aba **Authentication**.
+3. Clique em **browser**.
+4. Procure por **Username Password Form**.
+5. Por padrão já vem os itens OTP form, apenas coloque como required caso não esteja marcado.
+6. Vá para o local onde está o usuário.
+7. Clique em **Credentials**.
+8. Escolha **Configure OTP**.
+9. Clique em Send e-mail.
+10. Após isso um e-mail será enviado para o usuário para configurar a altentificação.
+
 ## Configuração do PostgreSQL
 
 Use o script abaixo para criar o schema e configurar o banco de dados:
