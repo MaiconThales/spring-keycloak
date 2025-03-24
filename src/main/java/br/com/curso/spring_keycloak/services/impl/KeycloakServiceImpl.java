@@ -1,20 +1,26 @@
 package br.com.curso.spring_keycloak.services.impl;
 
+import br.com.curso.spring_keycloak.components.HttpComponent;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
 import br.com.curso.spring_keycloak.services.KeycloakService;
+import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.util.*;
 
-// TODO pensar em algumas refatorações neste código
 @Service
 public class KeycloakServiceImpl implements KeycloakService {
+
+    public static final String ADMIN_REALMS = "/admin/realms/";
 
     @Value("${keycloak.url}")
     private String serverUrl;
@@ -26,18 +32,23 @@ public class KeycloakServiceImpl implements KeycloakService {
     private String password;
     @Value("${keycloak.user-login.grant-type}")
     private String grantType;
-
     @Value("${keycloak.realm}")
     private String realm;
 
+    private String accessToken;
+    private Instant tokenExpiration;
+
+    private final HttpComponent httpComponent;
+
+    public KeycloakServiceImpl(HttpComponent httpComponent) {
+        this.httpComponent = httpComponent;
+    }
+
     @Override
     public String createUser(String username, String email, String password) {
-        String token = this.getAdminAccessToken();
-        String url = this.serverUrl + "/admin/realms/" + this.realm + "/users";
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(this.getAdminAccessToken());
 
         Map<String, Object> user = new HashMap<>();
         user.put("username", username);
@@ -51,7 +62,10 @@ public class KeycloakServiceImpl implements KeycloakService {
         user.put("credentials", List.of(credentials));
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(user, headers);
-        ResponseEntity<String> response = new RestTemplate().postForEntity(url, request, String.class);
+        ResponseEntity<String> response = new RestTemplate().postForEntity(
+                this.serverUrl + ADMIN_REALMS + this.realm + "/users",
+                request,
+                String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
             String location = response.getHeaders().getFirst("Location");
@@ -65,16 +79,13 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public boolean removeUser(String userIdKeycloak) {
-        String token = this.getAdminAccessToken();
-        String url = this.serverUrl + "/admin/realms/" + this.realm + "/users/" + userIdKeycloak;
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(this.getAdminAccessToken());
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<String> response = new RestTemplate().exchange(
-                url,
+                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + userIdKeycloak,
                 HttpMethod.DELETE,
                 request,
                 String.class
@@ -85,16 +96,16 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public String getGroupByName(String name, boolean isCreate, String userIdKeycloak) {
-        String token = this.getAdminAccessToken();
-        String url = this.serverUrl + "/admin/realms/" + this.realm + "/groups?search=" + name;
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(this.getAdminAccessToken());
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<List<Map<String, Object>>> response = new RestTemplate().exchange(
-                url, HttpMethod.GET, request, new ParameterizedTypeReference<>() {
+                this.serverUrl + ADMIN_REALMS + this.realm + "/groups?search=" + name,
+                HttpMethod.GET,
+                request,
+                new ParameterizedTypeReference<>() {
                 }
         );
         List<Map<String, Object>> groups = Optional.ofNullable(response.getBody()).orElse(Collections.emptyList());
@@ -112,16 +123,13 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public boolean addGroupToUser(String userId, String groupId) {
-        String token = this.getAdminAccessToken();
-        String url = this.serverUrl + "/admin/realms/" + this.realm + "/users/" + userId + "/groups/" + groupId;
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(this.getAdminAccessToken());
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<String> response = new RestTemplate().exchange(
-                url,
+                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + userId + "/groups/" + groupId,
                 HttpMethod.PUT,
                 request,
                 String.class
@@ -131,28 +139,50 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     private String getAdminAccessToken() {
-        RestTemplate restTemplate = new RestTemplate();
-        String url = serverUrl + "/realms/master/protocol/openid-connect/token";
+        if (accessToken == null || isTokenExpired()) {
+            refreshToken();
+        }
+        return accessToken;
+    }
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("client_id", clientId);
-        body.add("username", username);
-        body.add("password", password);
-        body.add("grant_type", grantType);
+    private void refreshToken() {
+        httpComponent.httpHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        MultiValueMap<String, String> map = HttpParamsMapBuilder.builder()
+                .withClientId(clientId)
+                .withUsername(username)
+                .withPassword(password)
+                .withGrantType(grantType)
+                .build();
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                url,
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, httpComponent.httpHeaders());
+
+        ResponseEntity<String> response = httpComponent.restTemplate().exchange(
+                serverUrl + "/realms/master/protocol/openid-connect/token",
                 HttpMethod.POST,
                 request,
                 new ParameterizedTypeReference<>() {
                 }
         );
+        String responseBody = response.getBody();
 
-        return Objects.requireNonNull(response.getBody()).get("access_token").toString();
+        if (responseBody != null && !responseBody.isEmpty()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> tokenData = objectMapper.readValue(responseBody, new TypeReference<>() {
+                });
+
+                this.accessToken = tokenData.get("access_token").toString();
+                int expiresIn = (int) tokenData.get("expires_in");
+                this.tokenExpiration = Instant.now().plusSeconds(expiresIn - 30L);
+            } catch (JsonProcessingException e) {
+                throw new KeycloakException(e.getLocalizedMessage());
+            }
+        }
+    }
+
+    private boolean isTokenExpired() {
+        return tokenExpiration == null || Instant.now().isAfter(tokenExpiration);
     }
 
 }

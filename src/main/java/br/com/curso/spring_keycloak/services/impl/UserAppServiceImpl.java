@@ -39,8 +39,9 @@ public class UserAppServiceImpl implements UserAppService {
                     .createDate(LocalDateTime.now())
                     .build();
             this.createUserApp(userApp);
+        } else {
+            throw new KeycloakException("Erro ao tentar cadastrar o usuário.");
         }
-        throw new KeycloakException("Erro ao tentar cadastrar o usuário.");
     }
 
     @Override
