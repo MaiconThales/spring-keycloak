@@ -2,10 +2,12 @@ package br.com.curso.spring_keycloak.services.impl;
 
 import br.com.curso.spring_keycloak.components.HttpComponent;
 import br.com.curso.spring_keycloak.dto.UserDTO;
+import br.com.curso.spring_keycloak.exceptions.KeycloakException;
 import br.com.curso.spring_keycloak.services.LoginService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
     private String clientSecret;
     @Value("${keycloak.user-login.grant-type}")
     private String grantType;
+    @Value("${keycloak.access-link}")
+    private String linkAcess;
 
     private final HttpComponent httpComponent;
 
@@ -54,6 +58,12 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
             );
             return ResponseEntity.ok(response.getBody());
         } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                String responseBody = e.getResponseBodyAsString();
+                if (responseBody.contains("\"error\":\"invalid_grant\"") && responseBody.contains("Account is not fully set up")) {
+                    throw new KeycloakException("Por favor acessar o link " + linkAcess + " para configurar sua conta.");
+                }
+            }
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         }
     }
