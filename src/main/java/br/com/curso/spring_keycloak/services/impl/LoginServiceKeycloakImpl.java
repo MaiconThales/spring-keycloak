@@ -3,22 +3,25 @@ package br.com.curso.spring_keycloak.services.impl;
 import br.com.curso.spring_keycloak.components.HttpComponent;
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
+import br.com.curso.spring_keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.services.LoginService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Service
 public class LoginServiceKeycloakImpl implements LoginService<String> {
 
     @Value("${keycloak.auth-server-url}")
     private String keycloakServerUrl;
+    @Value("${keycloak.url}")
+    private String serverUrl;
     @Value("${keycloak.realm}")
     private String realm;
     @Value("${keycloak.resource}")
@@ -31,9 +34,11 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
     private String linkAcess;
 
     private final HttpComponent httpComponent;
+    private final KeycloakService keycloakService;
 
-    public LoginServiceKeycloakImpl(HttpComponent httpComponent) {
+    public LoginServiceKeycloakImpl(HttpComponent httpComponent, KeycloakService keycloakService) {
         this.httpComponent = httpComponent;
+        this.keycloakService = keycloakService;
     }
 
     @Override
@@ -91,6 +96,29 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         }
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(String email) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(this.keycloakService.getAdminAccessToken());
+
+        HttpEntity<Object> request = new HttpEntity<>(List.of("UPDATE_PASSWORD"), headers);
+
+        String userId = this.keycloakService.getIdUserKeycloak(email);
+        if (userId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado.");
+        }
+
+        ResponseEntity<String> response = new RestTemplate().exchange(
+                serverUrl + "/admin/realms/" + realm + "/users/" + userId + "/execute-actions-email",
+                HttpMethod.PUT,
+                request,
+                String.class
+        );
+
+        return ResponseEntity.ok(response.getBody());
     }
 
 }

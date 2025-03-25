@@ -9,4 +9,6 @@ public interface LoginService<T> {
 
     ResponseEntity<T> refreshToken(String refreshToken);
 
+    ResponseEntity<T> forgotPassword(String email);
+
 }

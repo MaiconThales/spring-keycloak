@@ -6,6 +6,7 @@ import br.com.curso.spring_keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -42,6 +43,37 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     public KeycloakServiceImpl(HttpComponent httpComponent) {
         this.httpComponent = httpComponent;
+    }
+
+    @Override
+    public String getIdUserKeycloak(String email) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(this.getAdminAccessToken());
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = httpComponent.restTemplate().exchange(
+                this.serverUrl + ADMIN_REALMS + this.realm + "/users?email=" + email,
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode root = objectMapper.readTree(response.getBody());
+
+                if (root.isArray() && !root.isEmpty()) {
+                    return root.get(0).get("id").asText();
+                }
+            } catch (Exception e) {
+                throw new KeycloakException("Erro ao buscar usuário no Keycloak.");
+            }
+        }
+
+        return "";
     }
 
     @Override
@@ -138,7 +170,8 @@ public class KeycloakServiceImpl implements KeycloakService {
         return response.getStatusCode().is2xxSuccessful();
     }
 
-    private String getAdminAccessToken() {
+    @Override
+    public String getAdminAccessToken() {
         if (accessToken == null || isTokenExpired()) {
             refreshToken();
         }
