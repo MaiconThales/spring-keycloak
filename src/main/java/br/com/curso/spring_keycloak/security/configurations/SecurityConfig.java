@@ -80,9 +80,6 @@ public class SecurityConfig {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
 
-        // SET USER IN CONTEXT
-        jwtAuthenticationConverter.setPrincipalClaimName("preferred_username");
-
         return jwtAuthenticationConverter;
     }
 
