@@ -73,6 +73,41 @@ A seguir instruções para configurar no Keycloak a altentificação de dois fat
 9. Clique em Send e-mail.
 10. Após isso um e-mail será enviado para o usuário para configurar a altentificação.
 
+### Configurar atributos customizados no token
+1. Acesse o **Realm**.
+2. Acesse a aba **Client Scopes**.
+3. Crie um novo Client Scope.
+    - Name: `custom-attributes` (Pode ser o que você quiser).
+    - Descrição: Colocar o que for melhor para o seu projeto.
+4. Clique em **Save**.
+5. Vá em **Mappers**.
+6. Crie um novo Mapper (Pode variar de acordo com o que é desejado).
+    - Vá para a opção **Configure a new mapper**.
+    - Selecione **User Attribute**.
+    - Mapper type: `User Attribute`.
+    - Name: `User Locale`.
+    - User attribute: Deixe como `custom` e coloque com o valor `locale`.
+    - Token Claim Name: `locale`.
+    - Claim JSON Type: `String`.
+    - Add to ID Token: `Sim`.
+    - Add to Access Token: `Sim`.
+    - Add to UserInfo: `Sim`.
+7. Clique em **Save**.
+8. Vá em **Client** para associar esse atributo ao seu client.
+9. Vá para a aba **Client scopes**.
+10. Clique em **Add client scope**.
+11. Associe o seu atributo e geralmente será default, vai depender do projeto.
+
+### Configurar internacionalização
+
+1. Acesse o **Realm**.
+2. Vá para **Realm Settings**.
+3. Clique em **Localization**.
+4. Habilite.
+5. Coloque os idiomas desejados no campo **Supported Locales**.
+6. Clique em **Realm overrides**.
+7. Deixe no minímo 1 item para cada linguagem escolhida.
+
 ## Configuração do PostgreSQL
 
 Use o script abaixo para criar o schema e configurar o banco de dados:

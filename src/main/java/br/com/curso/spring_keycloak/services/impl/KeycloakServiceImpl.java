@@ -1,6 +1,7 @@
 package br.com.curso.spring_keycloak.services.impl;
 
 import br.com.curso.spring_keycloak.components.HttpComponent;
+import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
 import br.com.curso.spring_keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
@@ -77,7 +78,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public String createUser(String username, String email, String password) {
+    public String createUser(String username, String email, String password, String locale) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(this.getAdminAccessToken());
@@ -93,6 +94,13 @@ public class KeycloakServiceImpl implements KeycloakService {
         credentials.put("temporary", false);
         user.put("credentials", List.of(credentials));
 
+        if (!this.validateLanguage(locale, this.getKeycloakSupportedLanguages())) {
+            throw new KeycloakException("Idioma do parametro não suportado.");
+        }
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("locale", List.of(locale));
+        user.put("attributes", attributes);
+
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(user, headers);
         ResponseEntity<String> response = new RestTemplate().postForEntity(
                 this.serverUrl + ADMIN_REALMS + this.realm + "/users",
@@ -107,6 +115,23 @@ public class KeycloakServiceImpl implements KeycloakService {
         }
 
         throw new KeycloakException("Erro ao criar usuário no Keycloak.");
+    }
+
+    @Override
+    public String updateUser(String idUserKeycloak, UserKeycloakDTO infoUser) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(this.getAdminAccessToken());
+
+        HttpEntity<UserKeycloakDTO> request = new HttpEntity<>(infoUser, headers);
+        ResponseEntity<String> response = new RestTemplate().exchange(
+                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + idUserKeycloak,
+                HttpMethod.PUT,
+                request,
+                String.class
+        );
+
+        return response.getBody();
     }
 
     @Override
@@ -178,6 +203,39 @@ public class KeycloakServiceImpl implements KeycloakService {
         return accessToken;
     }
 
+    /**
+     * Precisa ter pelo menos 1 palavra cadastrada para poder listar os dados.
+     *
+     * @return
+     */
+    @Override
+    public List<String> getKeycloakSupportedLanguages() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(this.getAdminAccessToken());
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = httpComponent.restTemplate().exchange(
+                this.serverUrl + ADMIN_REALMS + this.realm + "/localization",
+                HttpMethod.GET,
+                request,
+                String.class
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                return objectMapper.readValue(response.getBody(), new TypeReference<>() {
+                });
+            } catch (JsonProcessingException e) {
+                throw new KeycloakException("Erro ao buscar idiomas suportados no Keycloak por parte do Parse JSON.");
+            }
+        }
+
+        throw new KeycloakException("Não há idiomas suportados no Keycloak.");
+    }
+
     private void refreshToken() {
         httpComponent.httpHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -216,6 +274,11 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     private boolean isTokenExpired() {
         return tokenExpiration == null || Instant.now().isAfter(tokenExpiration);
+    }
+
+    private boolean validateLanguage(String localeParam, List<String> localesKeycloak) {
+        String selectedLocale = localesKeycloak.stream().filter(l -> l.equalsIgnoreCase(localeParam)).findFirst().orElseThrow(() -> new KeycloakException("Idioma do parametro não suportado."));
+        return !selectedLocale.isEmpty();
     }
 
 }
