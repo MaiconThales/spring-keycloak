@@ -1,7 +1,7 @@
-package br.com.curso.spring_keycloak.controllers;
+package br.com.curso.spring_keycloak.security.controllers;
 
 import br.com.curso.spring_keycloak.dto.UserDTO;
-import br.com.curso.spring_keycloak.services.LoginService;
+import br.com.curso.spring_keycloak.security.services.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;

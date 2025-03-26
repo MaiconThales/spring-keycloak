@@ -1,4 +1,4 @@
-package br.com.curso.spring_keycloak.services;
+package br.com.curso.spring_keycloak.keycloak.services;
 
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
 

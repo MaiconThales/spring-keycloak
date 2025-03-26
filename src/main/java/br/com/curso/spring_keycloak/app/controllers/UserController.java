@@ -1,8 +1,8 @@
-package br.com.curso.spring_keycloak.controllers;
+package br.com.curso.spring_keycloak.app.controllers;
 
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
-import br.com.curso.spring_keycloak.services.UserAppService;
+import br.com.curso.spring_keycloak.app.services.UserAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

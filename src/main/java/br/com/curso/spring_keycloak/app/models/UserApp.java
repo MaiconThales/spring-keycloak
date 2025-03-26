@@ -1,4 +1,4 @@
-package br.com.curso.spring_keycloak.models;
+package br.com.curso.spring_keycloak.app.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

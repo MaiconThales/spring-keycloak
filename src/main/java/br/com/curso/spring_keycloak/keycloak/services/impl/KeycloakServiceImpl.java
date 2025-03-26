@@ -1,9 +1,9 @@
-package br.com.curso.spring_keycloak.services.impl;
+package br.com.curso.spring_keycloak.keycloak.services.impl;
 
 import br.com.curso.spring_keycloak.components.HttpComponent;
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
-import br.com.curso.spring_keycloak.services.KeycloakService;
+import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -1,4 +1,4 @@
-package br.com.curso.spring_keycloak.configurations;
+package br.com.curso.spring_keycloak.security.configurations;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -79,6 +79,10 @@ public class SecurityConfig {
         };
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+
+        // SET USER IN CONTEXT
+        jwtAuthenticationConverter.setPrincipalClaimName("preferred_username");
+
         return jwtAuthenticationConverter;
     }
 

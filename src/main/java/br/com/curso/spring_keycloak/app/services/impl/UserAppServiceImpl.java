@@ -1,12 +1,12 @@
-package br.com.curso.spring_keycloak.services.impl;
+package br.com.curso.spring_keycloak.app.services.impl;
 
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
-import br.com.curso.spring_keycloak.models.UserApp;
-import br.com.curso.spring_keycloak.repositores.UserAppRepository;
-import br.com.curso.spring_keycloak.services.KeycloakService;
-import br.com.curso.spring_keycloak.services.UserAppService;
+import br.com.curso.spring_keycloak.app.models.UserApp;
+import br.com.curso.spring_keycloak.app.repositories.UserAppRepository;
+import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
+import br.com.curso.spring_keycloak.app.services.UserAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package br.com.curso.spring_keycloak.services;
+package br.com.curso.spring_keycloak.security.services;
 
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import org.springframework.http.ResponseEntity;

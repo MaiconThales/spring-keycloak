@@ -1,8 +1,8 @@
-package br.com.curso.spring_keycloak.services;
+package br.com.curso.spring_keycloak.app.services;
 
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
-import br.com.curso.spring_keycloak.models.UserApp;
+import br.com.curso.spring_keycloak.app.models.UserApp;
 
 public interface UserAppService {
 

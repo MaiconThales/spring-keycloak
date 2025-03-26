@@ -1,4 +1,4 @@
-package br.com.curso.spring_keycloak.controllers;
+package br.com.curso.spring_keycloak.app.controllers;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

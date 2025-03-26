@@ -1,10 +1,10 @@
-package br.com.curso.spring_keycloak.services.impl;
+package br.com.curso.spring_keycloak.security.services.impl;
 
 import br.com.curso.spring_keycloak.components.HttpComponent;
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
-import br.com.curso.spring_keycloak.services.KeycloakService;
-import br.com.curso.spring_keycloak.services.LoginService;
+import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
+import br.com.curso.spring_keycloak.security.services.LoginService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
