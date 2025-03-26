@@ -6,7 +6,15 @@
 
 ## Descrição
 
-Este projeto é um teste prático para aplicar conhecimentos adquiridos sobre o Keycloak. Ele é utilizado para autenticação e autorização de usuários em um ambiente Spring Boot.
+Este projeto é um teste prático para aplicar conhecimentos adquiridos sobre o Keycloak.
+
+O que o sistema faz:
+- Autentificação e autorização.
+- Internacionalização nas respostas da API de acordo com o usuário logado.
+- Valições do Keycloak via e-mail.
+
+Para o projeto rodar corretamente é necessário um banco de dados Postgree, Keycloak e SMTP4DEV.
+Todos os itens listados estão rodando em um docker.
 
 ## Tecnologias Utilizadas
 
