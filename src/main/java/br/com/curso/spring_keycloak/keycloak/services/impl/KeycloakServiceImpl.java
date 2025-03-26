@@ -5,6 +5,7 @@ import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
 import br.com.curso.spring_keycloak.exceptions.KeycloakException;
 import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
+import br.com.curso.spring_keycloak.utils.MessageUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,6 +24,7 @@ import java.util.*;
 public class KeycloakServiceImpl implements KeycloakService {
 
     public static final String ADMIN_REALMS = "/admin/realms/";
+    public static final String USERS = "/users/";
 
     @Value("${keycloak.url}")
     private String serverUrl;
@@ -70,7 +72,7 @@ public class KeycloakServiceImpl implements KeycloakService {
                     return root.get(0).get("id").asText();
                 }
             } catch (Exception e) {
-                throw new KeycloakException("Erro ao buscar usuário no Keycloak.");
+                throw new KeycloakException(MessageUtils.getMessage("keycloak.get-user"));
             }
         }
 
@@ -95,7 +97,7 @@ public class KeycloakServiceImpl implements KeycloakService {
         user.put("credentials", List.of(credentials));
 
         if (!this.validateLanguage(locale, this.getKeycloakSupportedLanguages())) {
-            throw new KeycloakException("Idioma do parametro não suportado.");
+            throw new KeycloakException(MessageUtils.getMessage("keycloak.get-locale-parameter"));
         }
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("locale", List.of(locale));
@@ -114,7 +116,7 @@ public class KeycloakServiceImpl implements KeycloakService {
             }
         }
 
-        throw new KeycloakException("Erro ao criar usuário no Keycloak.");
+        throw new KeycloakException(MessageUtils.getMessage("keycloak.error-create-user"));
     }
 
     @Override
@@ -124,8 +126,9 @@ public class KeycloakServiceImpl implements KeycloakService {
         headers.setBearerAuth(this.getAdminAccessToken());
 
         HttpEntity<UserKeycloakDTO> request = new HttpEntity<>(infoUser, headers);
+
         ResponseEntity<String> response = new RestTemplate().exchange(
-                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + idUserKeycloak,
+                this.serverUrl + ADMIN_REALMS + this.realm + USERS + idUserKeycloak,
                 HttpMethod.PUT,
                 request,
                 String.class
@@ -142,7 +145,7 @@ public class KeycloakServiceImpl implements KeycloakService {
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<String> response = new RestTemplate().exchange(
-                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + userIdKeycloak,
+                this.serverUrl + ADMIN_REALMS + this.realm + USERS + userIdKeycloak,
                 HttpMethod.DELETE,
                 request,
                 String.class
@@ -175,7 +178,7 @@ public class KeycloakServiceImpl implements KeycloakService {
             this.removeUser(userIdKeycloak);
         }
 
-        throw new KeycloakException("Grupo não existe no Keycloak.");
+        throw new KeycloakException(MessageUtils.getMessage("keycloak.group-not-found"));
     }
 
     @Override
@@ -186,7 +189,7 @@ public class KeycloakServiceImpl implements KeycloakService {
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         ResponseEntity<String> response = new RestTemplate().exchange(
-                this.serverUrl + ADMIN_REALMS + this.realm + "/users/" + userId + "/groups/" + groupId,
+                this.serverUrl + ADMIN_REALMS + this.realm + USERS + userId + "/groups/" + groupId,
                 HttpMethod.PUT,
                 request,
                 String.class
@@ -229,11 +232,11 @@ public class KeycloakServiceImpl implements KeycloakService {
                 return objectMapper.readValue(response.getBody(), new TypeReference<>() {
                 });
             } catch (JsonProcessingException e) {
-                throw new KeycloakException("Erro ao buscar idiomas suportados no Keycloak por parte do Parse JSON.");
+                throw new KeycloakException(MessageUtils.getMessage("keycloak.error-parse-locale"));
             }
         }
 
-        throw new KeycloakException("Não há idiomas suportados no Keycloak.");
+        throw new KeycloakException(MessageUtils.getMessage("keycloak.locale-not-found-keycloak"));
     }
 
     private void refreshToken() {
@@ -277,7 +280,10 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     private boolean validateLanguage(String localeParam, List<String> localesKeycloak) {
-        String selectedLocale = localesKeycloak.stream().filter(l -> l.equalsIgnoreCase(localeParam)).findFirst().orElseThrow(() -> new KeycloakException("Idioma do parametro não suportado."));
+        String selectedLocale = localesKeycloak.stream().filter(l ->
+                        l.equalsIgnoreCase(localeParam))
+                .findFirst()
+                .orElseThrow(() -> new KeycloakException(MessageUtils.getMessage("keycloak.get-locale-parameter")));
         return !selectedLocale.isEmpty();
     }
 

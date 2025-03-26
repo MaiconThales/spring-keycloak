@@ -1,8 +1,9 @@
 package br.com.curso.spring_keycloak.app.controllers;
 
+import br.com.curso.spring_keycloak.app.services.UserAppService;
 import br.com.curso.spring_keycloak.dto.UserDTO;
 import br.com.curso.spring_keycloak.dto.UserKeycloakDTO;
-import br.com.curso.spring_keycloak.app.services.UserAppService;
+import br.com.curso.spring_keycloak.utils.MessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,14 +24,14 @@ public class UserController {
     @PostMapping("/create")
     public ResponseEntity<?> createUser(@RequestBody UserDTO user) {
         this.userAppService.createUserWithKeycloak(user);
-        return ResponseEntity.ok("Cadastro realizado com sucesso.");
+        return ResponseEntity.ok(MessageUtils.getMessage("user.create-success"));
     }
 
     @PreAuthorize("hasAuthority('ADMIN_WRITE')")
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserKeycloakDTO user) {
         this.userAppService.updateUserWithKeycloak(user);
-        return ResponseEntity.ok("Alteração realizada com sucesso.");
+        return ResponseEntity.ok(MessageUtils.getMessage("user.update-success"));
     }
 
 }

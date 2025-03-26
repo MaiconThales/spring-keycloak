@@ -7,6 +7,7 @@ import br.com.curso.spring_keycloak.app.models.UserApp;
 import br.com.curso.spring_keycloak.app.repositories.UserAppRepository;
 import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.app.services.UserAppService;
+import br.com.curso.spring_keycloak.utils.MessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +46,7 @@ public class UserAppServiceImpl implements UserAppService {
                     .build();
             this.createUserApp(userApp);
         } else {
-            throw new KeycloakException("Erro ao tentar cadastrar o usuário.");
+            throw new KeycloakException(MessageUtils.getMessage("user.create-error"));
         }
     }
 

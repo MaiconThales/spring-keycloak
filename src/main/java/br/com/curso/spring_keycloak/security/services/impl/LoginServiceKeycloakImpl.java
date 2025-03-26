@@ -6,6 +6,7 @@ import br.com.curso.spring_keycloak.exceptions.KeycloakException;
 import br.com.curso.spring_keycloak.keycloak.services.KeycloakService;
 import br.com.curso.spring_keycloak.security.services.LoginService;
 import br.com.curso.spring_keycloak.utils.HttpParamsMapBuilder;
+import br.com.curso.spring_keycloak.utils.MessageUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -66,7 +67,7 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
             if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
                 String responseBody = e.getResponseBodyAsString();
                 if (responseBody.contains("\"error\":\"invalid_grant\"") && responseBody.contains("Account is not fully set up")) {
-                    throw new KeycloakException("Por favor acessar o link " + linkAcess + " para configurar sua conta.");
+                    throw new KeycloakException(MessageUtils.getMessage("login.need-configure", linkAcess));
                 }
             }
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());

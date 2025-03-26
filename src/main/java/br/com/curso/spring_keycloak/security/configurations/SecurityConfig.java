@@ -1,5 +1,7 @@
 package br.com.curso.spring_keycloak.security.configurations;
 
+import br.com.curso.spring_keycloak.utils.MessageUtils;
+import br.com.curso.spring_keycloak.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -86,9 +88,14 @@ public class SecurityConfig {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
+            String localeToken = (SecurityUtils.getInfoLogged() != null && SecurityUtils.getInfoLogged().getLocale() != null) ?
+                    SecurityUtils.getInfoLogged().getLocale() :
+                    "en";
+            String message = MessageUtils.getMessage("security.access-denied", localeToken);
+
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            String jsonResponse = "{\"message\": \"Você não tem permissão para acessar este recurso.\"}";
+            String jsonResponse = "{\"message\": \"" + message + "\"}";
             response.getWriter().write(jsonResponse);
         };
     }
