@@ -50,10 +50,12 @@ public class SecurityConfig {
                     auth.requestMatchers("/login").permitAll();
                     auth.requestMatchers("/refresh-token").permitAll();
                     auth.requestMatchers("/forgot-password").permitAll();
+                    auth.requestMatchers("/logout").permitAll();
                     auth.requestMatchers("/admin").hasAnyAuthority("ADMIN_READ", "ADMIN_WRITE");
                     auth.requestMatchers("/operation").hasAnyAuthority("OPERATION_READ", "OPERATION_WRITE");
                     auth.requestMatchers("/users/*").hasAnyAuthority("ADMIN_WRITE");
                 })
+                .logout(AbstractHttpConfigurer::disable)
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
                 .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedHandler(accessDeniedHandler()));
         return http.build();

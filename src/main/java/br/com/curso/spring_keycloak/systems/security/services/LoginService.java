@@ -34,4 +34,12 @@ public interface LoginService<T> {
      */
     ResponseEntity<T> forgotPassword(String email);
 
+    /**
+     * Realiza o logout do usuário.
+     * Como está sendo utilizado o token JWT padrão, ao tentar acessar um recurso o mesmo será listado até a expiração do token.
+     *
+     * @return a resposta da tentativa de logout.
+     */
+    ResponseEntity<T> logout();
+
 }

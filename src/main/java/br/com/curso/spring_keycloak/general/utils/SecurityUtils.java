@@ -29,7 +29,21 @@ public class SecurityUtils {
                     .email("email")
                     .locale(jwt.getClaim("locale"))
                     .username(jwt.getClaim("preferred_username"))
+                    .userIdKeycloak(jwt.getClaim("sub"))
                     .build();
+        }
+        return null;
+    }
+
+    /**
+     * Obtém o token JWT do usuário autenticado.
+     *
+     * @return o token JWT do usuário autenticado, ou null se não houver usuário autenticado.
+     */
+    public static String getToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getTokenValue();
         }
         return null;
     }

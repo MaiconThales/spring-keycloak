@@ -3,18 +3,22 @@ package br.com.curso.spring_keycloak.systems.security.services.impl;
 import br.com.curso.spring_keycloak.general.components.HttpComponent;
 import br.com.curso.spring_keycloak.general.dto.UserDTO;
 import br.com.curso.spring_keycloak.general.exceptions.KeycloakException;
-import br.com.curso.spring_keycloak.systems.keycloak.services.KeycloakService;
-import br.com.curso.spring_keycloak.systems.security.services.LoginService;
 import br.com.curso.spring_keycloak.general.utils.HttpParamsMapBuilder;
 import br.com.curso.spring_keycloak.general.utils.MessageUtils;
+import br.com.curso.spring_keycloak.general.utils.SecurityUtils;
+import br.com.curso.spring_keycloak.systems.keycloak.services.KeycloakService;
+import br.com.curso.spring_keycloak.systems.security.services.LoginService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class LoginServiceKeycloakImpl implements LoginService<String> {
@@ -120,6 +124,61 @@ public class LoginServiceKeycloakImpl implements LoginService<String> {
         );
 
         return ResponseEntity.ok(response.getBody());
+    }
+
+    @Override
+    public ResponseEntity<String> logout() {
+        String userId = Objects.requireNonNull(SecurityUtils.getInfoLogged()).getUserIdKeycloak();
+        if (userId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(MessageUtils.getMessage("login.user-not-found"));
+        }
+
+        revokeToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(this.keycloakService.getAdminAccessToken());
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response = new RestTemplate().exchange(
+                this.serverUrl + "/admin/realms/" + this.realm + "/users/" + userId + "/logout",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.ok(MessageUtils.getMessage("login.user-success-logout"));
+        }
+
+        throw new KeycloakException(MessageUtils.getMessage("login.user-error-logout"));
+    }
+
+    /**
+     * Revoga o token de acesso do usuário.
+     */
+    private void revokeToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setBasicAuth(this.clientId, this.clientSecret);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("token", SecurityUtils.getToken());
+        params.add("client_id", this.clientId);
+        params.add("client_secret", this.clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        ResponseEntity<String> revokeResponse = new RestTemplate().exchange(
+                this.serverUrl + "/realms/" + this.realm + "/protocol/openid-connect/revoke",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        if (!revokeResponse.getStatusCode().is2xxSuccessful()) {
+            throw new KeycloakException(MessageUtils.getMessage("login.user-error-revoke-token"));
+        }
     }
 
 }

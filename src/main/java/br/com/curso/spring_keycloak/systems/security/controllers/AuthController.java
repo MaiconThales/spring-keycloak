@@ -63,4 +63,13 @@ public class AuthController {
         return this.loginService.forgotPassword(email);
     }
 
+    /**
+     * Endpoint para logout.
+     * @return a resposta da tentativa de logout.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        return this.loginService.logout();
+    }
+
 }

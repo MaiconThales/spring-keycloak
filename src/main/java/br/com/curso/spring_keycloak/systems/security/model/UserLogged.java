@@ -10,5 +10,6 @@ public class UserLogged {
     private String username;
     private String email;
     private String locale;
+    private String userIdKeycloak;
 
 }
